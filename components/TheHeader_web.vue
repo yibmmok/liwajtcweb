@@ -74,6 +74,9 @@
   })  
 	
 	onMounted(() => {
+    useHead({
+      titleTemplate: '珠寶動產交易中心 - %s',
+    })
     // 先檢查 APIsvr是否存在? 若不存在, 從init.json取得
     let sAPIsvr = window.sessionStorage.getItem('liwaAPIsvr')
     if ((sAPIsvr == undefined) || (sAPIsvr == "") || (sAPIsvr == null)) {

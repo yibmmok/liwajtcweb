@@ -1,0 +1,105 @@
+<script setup lang="ts">
+  /*********************************************************
+  prog name: 使用者註冊, author: James Lin, date: 2022/10/05
+
+  **********************************************************/
+	import { ref, onMounted, computed } from "vue"
+  import { useFetch, createFetch } from "@vueuse/core"
+
+  const submitted = ref(false)
+  const APIsvr = ref('')
+  const isMessage = ref('')
+  const res = ref([])
+  const liwaData = ref({
+    memberNM:'',
+    mobile:''
+  })
+
+
+  const register = async () => {
+    // 先檢查手機號碼是否已存在
+    let datastr = JSON.stringify(liwaData.value)
+
+    const useMyFetch = createFetch({
+      baseUrl: APIsvr.value,
+      options: {},
+      fetchOptions: {
+        mode: 'cors',
+        headers: new Headers({
+          'Content-Type': 'application/json; charset=utf-8'
+        }),
+        body: JSON.stringify(liwaData.value)
+      }
+    })  
+
+    const { data } = await useMyFetch('regis_web.php').post().json()
+    if (data.value.arrSQL.length > 0) res.value = data.value.arrSQL[0]
+    let msg = res.value.message
+    if (msg) {
+      isMessage.value = msg
+    } else {
+      // 將回傳的使用者資料設給 sessionStorage
+      window.localStorage.setItem('liwaJWT', res.value.token)
+      window.sessionStorage.setItem('liwaUserID', res.value.memberID)
+      window.sessionStorage.setItem('liwaUserName', res.value.memberNM)
+      window.sessionStorage.setItem('liwaIconPath', res.value.picpath)
+      window.sessionStorage.setItem('liwaImgsvr', res.value.imgsvr)
+      window.sessionStorage.setItem('liwaUserGrade', res.value.grade)
+      window.localStorage.setItem('liwaWelcome', 1)
+
+      // 已通過註冊則跳到歡迎畫面
+      window.location.href='/welcome'
+    }
+  }
+
+  onMounted(() => {
+    useHead({title:`註冊本中心`})
+    APIsvr.value = window.sessionStorage.getItem('liwaAPIsvr')
+  })
+	
+  definePageMeta({
+    layout:"web",
+  })
+</script>
+
+<template>
+
+<div class="h-[calc(100vh_-_7rem)] bg-slate-200 flex justify-center items-start w-full">
+  <div class="pt-4">
+    <div class="bg-white m-2 rounded-xl max-w-md pb-1">
+      <div class="bg-white px-10 py-5 w-screen shadow-md max-w-sm">
+        <h1 class="text-center text-2xl font-semibold text-gray-600">會員註冊</h1>
+      </div>                
+      <FormKit 
+        form-class="px-4 py-2 bg-yellow-200 rounded-2xl w-11/12"
+        type="form"
+        :form-class="submitted? 'hidden': 'block'"
+        style="margin: 1rem auto;"
+        v-model="liwaData"
+        submit-label="上傳"
+        @submit="register"
+      >
+        <FormKit
+          name="memberNM"
+          label="姓名"
+          type="text"
+          placeholder="請輸入姓名"
+          help="可輸入中英文名字(字數限制100字)"
+          validation="required"
+        />        
+        <FormKit
+          name="mobile"
+          label="請輸入手機號碼"
+          type="text"
+          placeholder="請輸入手機號碼"
+          help="請輸入您的手機號碼, 共10碼, 無空白"
+          validation="required|number|length:10"
+        />
+      </FormKit>
+      <div class="w-full pl-8 text-left text-red-400 text-md">{{ isMessage }}</div>
+    </div> 
+  </div> 
+
+</div>
+
+</template>

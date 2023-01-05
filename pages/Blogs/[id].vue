@@ -18,7 +18,7 @@
 	const route = useRoute()
 
 	const loadData = async () => {
-		let APIsvr = 'http://172.18.2.13'
+		let APIsvr = window.sessionStorage.getItem('liwaAPIsvr')
 		let url = `${APIsvr}/Blogs_haveDetail.php?mainID=${mainID.value}`
 		const data = await useFetch(url, {method: 'GET'}, {refetch: true}).get().json()
 		liwaData.value = data.data.value.arrSQL[0]

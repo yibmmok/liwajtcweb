@@ -102,8 +102,8 @@
 	})
 
 	definePageMeta({
-	  title: '首頁',
 	  layout: 'web',
+	  colorMode: 'light'
 	})
 </script>
 

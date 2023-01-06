@@ -83,6 +83,7 @@
 	})
 
 	definePageMeta({
+		colorMode:'light',
 	  layout:"web",
 	})  
 </script>

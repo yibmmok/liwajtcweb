@@ -92,6 +92,7 @@
 
 	definePageMeta({
 	  layout: "web",
+	  colorMode: "light",
 	})	
 	
 </script>

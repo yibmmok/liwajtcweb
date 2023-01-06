@@ -4,7 +4,7 @@
 	Todo: 1. 串資料庫
 	**********************************************************/
 	import { ref, onMounted } from "vue"
-	import { useWindowSize, useTitle, useFetch, createFetch } from "@vueuse/core"
+	import { useWindowSize, useFetch, createFetch } from "@vueuse/core"
 	import queryString from "query-string"
 	import VueSocialSharing from "vue-social-sharing"
 	import { copyText } from "vue3-clipboard"
@@ -58,6 +58,7 @@
 		status.value = liwaData.value.status
 		stitle.value = liwaData.value.prodNM + ' | JT.C'
 		descp.value = liwaData.value.descp
+		useHead({title:stitle.value})
 		afterLoadData()	
 	}
 
@@ -339,7 +340,6 @@
 	// 設定對話盒相關 ends	
 
 	onMounted(() => {
-		useHead({title:'物件明細'})
 		const { width, height } = useWindowSize()
 		// 若小於預設螢幕寬度, 則設為預設螢幕寬度
 		if (width.value < iPicWidth.value) {
@@ -357,6 +357,7 @@
 
 	definePageMeta({
 	  layout: "web",
+	  colorMode: "light"
 	})		
 
 </script>

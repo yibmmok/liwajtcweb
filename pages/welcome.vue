@@ -10,8 +10,8 @@
 	})
 
 	definePageMeta({
-	title: 'JT.C 歡迎頁',
-	layout:"web",
+		layout:"web",
+		colorMode: "light"
 	})
 </script>
 

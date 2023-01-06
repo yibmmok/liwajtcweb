@@ -37,7 +37,7 @@
 		})
 	}
 
-	onMounted(() => {		
+	onMounted(() => {
 		mainID.value = route.params.id
 		fullPath.value = route.fullPath
 		loadData()
@@ -45,6 +45,7 @@
 
 	definePageMeta({
 	  layout: "web",
+	  colorMode: "light"
 	})		
 </script>
 
@@ -93,6 +94,7 @@
 		<div class="w-full py-2 ">
 			<div class="w-36 h-12 mx-auto py-2 text-blue-400 text-lg"><a href="/Blogs" >[回到文章列表]</a></div>
 		</div>
+
 	</div>
 </template>
 

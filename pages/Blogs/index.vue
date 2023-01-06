@@ -68,13 +68,14 @@
 	}
 
 	onMounted(() => {
+		useHead({title:'部落格文章列表'})
 		siteID.value = window.sessionStorage.getItem('liwaSiteID')
 		fetchData()
 	})
 
 	definePageMeta({
-	  title: '部落格文章',
-	  layout: "web",
+		colorMode:'light',
+		layout: "web",
 	})	
 </script>
 

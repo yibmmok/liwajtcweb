@@ -179,6 +179,7 @@
 
 	definePageMeta({
 	  layout: "web",
+	  colorMode: "light"
 	})	
 
 	onMounted(() => {

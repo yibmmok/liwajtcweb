@@ -13,6 +13,11 @@
   	picpath.value = `${imgSvr}/syspics/NoAuth.png`
   })
 
+
+  definePageMeta({
+    colorMode:'light',
+    layout:"web",
+  })  
 </script>
 
 <template>

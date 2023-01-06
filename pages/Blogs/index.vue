@@ -40,7 +40,7 @@
 		let key = itemTypeID.value[idx]
 		let sTypeID = ''
 		switch (key) {
-			case '':
+			case '全部文章':
 				sTypeID = ''
 				break;
 			case '珠寶基礎':

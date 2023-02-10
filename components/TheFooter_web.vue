@@ -35,7 +35,7 @@
 
 <template>
 	<footer class="w-full lg:w-full bg-white">
-        <hr class="h-1 border-0 bg-gray-700 text-gray-700">
+        <hr class="w-full lg:w-[calc(100%_-_2rem)] h-[0.1rem] opacity-70 mx-auto my-4 border-0 bg-orange-500">
         <div class="w-full lg:w-[80%] mx-auto my-0">
             <div class="flex flex-col lg:flex-row">
                 <div class="w-full lg:w-[300px]">

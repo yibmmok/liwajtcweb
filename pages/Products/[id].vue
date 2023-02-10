@@ -19,6 +19,7 @@
 
 	const route = useRoute()
 	const mainID = ref('')
+	const userID = ref('')
 	const APIsvr = ref('')
 	const imgsvr = ref('')
 	const liwaData = ref([])
@@ -59,6 +60,7 @@
 		let url = `${APIsvr.value}/w021_haveDetail.php?${sQuery}`
 		const data = await useFetch(url, {method: 'GET'}, {refetch: true}).get().json()
 		liwaData.value = data.data.value.arrSQL[0]
+		userID.value = data.data.value.userID
 		status.value = liwaData.value.status
 		stitle.value = liwaData.value.prodNM + ' | JT.C'
 		descp.value = liwaData.value.descp
@@ -147,16 +149,15 @@
 	}
 
 	const afterLoadData = () => {
-		// let userID = window.sessionStorage.getItem('liwaUserID')
-		if (userID) {
+		if (userID.value) {
 			loadLike()
-			if (userID == liwaData.value.sellerID) {
+			if (userID.value == liwaData.value.sellerID) {
 				// 若為賣家的處理
 				isSeller.value = true
 				// 載入該物件所有出價記錄
 				load021D1()
 			} else {
-				if (userID == liwaData.value.tmpBiderID) {
+				if (userID.value == liwaData.value.tmpBiderID) {
 					// 若為出價買家
 					isBargain.value = true
 					if (liwaData.value.remainBargain < 3) {
@@ -224,7 +225,6 @@
 
 	const openBargain = async () => {
 		// 先檢查是否登入, 若未登入, 跳login界面, 若已登入, 檢查物件是否斡旋或待成交, 再檢查買家的出價資格
-		let userID = window.sessionStorage.getItem('liwaUserID')
 		let sJWT = window.localStorage.getItem('liwaJWT')
 		if (sJWT) {
 			// 先檢查物件的 status > 1(是否斡旋或待成交)
@@ -312,9 +312,9 @@
 	const setPriceBack = async (idx, iRes) => {
 		showMsg('系統訊息', '系統處理中, 請稍候...', 2)
 		let keyData = {
-			"siteID": window.sessionStorage.getItem('liwaSiteID'),
+			"JWT": window.localStorage.getItem('liwaJWT'),
 			"prodID": mainID.value,
-			"sellerID": window.sessionStorage.getItem('liwaUserID'),
+			"sellerID": userID.value,
 			"bidDateTime": liwaD1.value[idx].bidDateTime,
 			"bidResult": iRes			
 		}
@@ -427,7 +427,7 @@
 	<div class="mainBox relative w-full flex flex-col lg:flex-row bg-stone-100 py-4 lg:py-8">
 		<div class="w-full lg:w-2/5">
 			<div class="w-full min-h-[380px] lg:h-[500px] mx-auto my-0 relative flex flex-row">
-				<div class="hidden lg:block lg:w-2/5 min-h-[380px] lg:h-[500px] ml-12 mt-12 bg-transparent">
+				<div class="hidden lg:block lg:w-1/3 min-h-[380px] lg:h-[500px] ml-8 mt-12 bg-transparent">
 					<Thumbnail  
 						:currentSlide="slide" 
 						:liwaData="liwaPics" 
@@ -438,7 +438,7 @@
 						@setSlide="setSlide"
 					/>
 				</div>
-				<div class="w-full lg:w-3/5 h-auto ml-0 lg:ml-[80px] pt-[50px] bg-transparent">
+				<div class="w-full lg:w-2/3 h-auto ml-0 lg:ml-[40px] pt-[50px] bg-transparent">
 					<Carousel 
 						:currentSlide="slide" 
 						:thumbs="thumbs" 
@@ -451,35 +451,6 @@
 		</div>
 		<div class="w-full lg:w-3/5 px-4 lg:px-16 pt-4 relative">
 			<h1 class="w-full text-4xl text-slate-700 font-bold mt-2 mb-6 pb-6 border-b-2 border-b-slate-200 word-wrap">{{ liwaData.prodNM }}</h1>
-<!--			<div class="w-28 absolute top-[72px] lg:top-8 right-2 lg:right-[60px]">
-				<div class="w-auto h-8 flex flex-row-reverse justify-start">
-					// 連結分享 
-					<div class="w-8 h-8 ml-2 cursor-pointer" @click="doCopy()">
-						<IconLink45deg class="w-8 h-8 text-slate-500" />
-					</div>
-					// 社交媒體分享 
-					<div class="w-8 h-8 ml-2 rounded bg-slate-500 pt-[.125rem]">
-						<ShareNetwork
-							network="line"
-							:url="fullPath"
-						    :title="stitle"
-						    :description="descp"
-						>
-							<IconLine class="w-7 h-7 text-sm text-white" />
-						</ShareNetwork>
-					</div>
-					<div class="w-8 h-8 ml-2 rounded bg-slate-500 pt-[.125rem] pl-[.125rem]">
-						<ShareNetwork
-							network="facebook"
-							:url="fullPath"
-						    :title="stitle"
-						    :description="descp"
-						>
-							<IconFacebook class="w-7 h-7 text-sm text-white" />
-						</ShareNetwork>
-					</div>						
-				</div>
-			</div>  -->
 			<div class="w-full flex flex-row my-12">
 				<div class="w-1/2">
 					<p class="text-sm font-bold text-slate-400 mb-2">期望售價</p>
@@ -666,4 +637,5 @@
 	{
 		margin-left:0.5rem;
 	}
+	
 </style>

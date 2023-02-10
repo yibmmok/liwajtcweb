@@ -40,14 +40,14 @@
             <div class="flex flex-col lg:flex-row">
                 <div class="w-full lg:w-[300px]">
                     <div class="w-full flex flex-row">
-                        <div class="w-[80%] mb-4">
-                            <img :src="imgLogo" class="flex md:justify-self-start mx-4 my-2"  />
+                        <div class="w-full mb-4">
+                            <img src="../static/Logo_web.jpg" class="flex md:justify-self-start mx-4 my-2"  />
                             <div class="tate01 w-full text-2xl text-orange-600 pt-0 py-6 text-center">安心交易</div>
-                            <div class="flex flex-row pl-8">
+                            <div class="flex flex-row ">
                                 <div class="w-1/2 text-orange-500">科學檢驗</div>
                                 <div class="w-1/2 text-orange-500">雙重保障</div>
                             </div>
-                            <div class="flex flex-row pl-8">
+                            <div class="flex flex-row">
                                 <div class="w-1/2 text-orange-500">中立客觀</div>
                                 <div class="w-1/2 text-orange-500">易於成交</div>
                             </div>

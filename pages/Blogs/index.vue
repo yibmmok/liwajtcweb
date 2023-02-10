@@ -6,9 +6,10 @@
 	import { ref, onMounted } from "vue"
 	import { useFetch, createFetch, useTitle } from "@vueuse/core"
 	import liwaPages from "../../components/liwaPages"
+	import queryString from "query-string"
 
 	const proglink = ref('/Blogs')
-	const siteID = ref('')
+	const APIsvr = ref('')
 	const liwaData = ref([])
 	const liwaFilter = ref([])
 	const itemTypeID = ref(['全部文章', '珠寶基礎', '鑽石', '彩寶', '翡翠', '軟玉'])
@@ -22,13 +23,17 @@
 
 	const setActvPage = (iPage) => {
 		page.value = iPage
-		fetchData()
+		loadData()
 	}	
 
-	const fetchData = async () => {
-		let APIsvr = window.sessionStorage.getItem('liwaAPIsvr')
-		let url = `${APIsvr}/Blogs_M.php?siteID=${siteID.value}&page=${page.value}&limit=10`
-	
+	const loadData = async () => {
+		let keydata = {
+			'JWT': window.localStorage.getItem('liwaJWT'),
+			'page': page.value,
+			'limit': 10
+		}
+		let sQuery = queryString.stringify(keydata)
+		let url = `${APIsvr.value}/Blogs_M.php?${sQuery}`
 		const data = await useFetch(url, {method: 'GET'}, {refetch: true}).get().json()
 		liwaData.value = data.data.value.arrSQL
 		liwaFilter.value = [...liwaData.value]
@@ -69,8 +74,8 @@
 
 	onMounted(() => {
 		useHead({title:'部落格文章列表'})
-		siteID.value = window.sessionStorage.getItem('liwaSiteID')
-		fetchData()
+		APIsvr.value = window.sessionStorage.getItem('liwaAPIsvr')
+		loadData()
 	})
 
 	definePageMeta({
@@ -82,7 +87,7 @@
 <template>
 	<div class="w-full lg:min-h-[calc(100vh_-_7.15rem)] py-2 bg-indigo-50">
 		<div class="w-full lg:w-[900px] lg:mx-auto py-2 flex flex-row justify-center flex-wrap">
-			<div v-for="(item, index) in itemTypeID" :key="index" class="btnItemType w-24 h-12 mr-3 py-3 rounded bg-yellow-700 text-white text-center cursor-pointer" @click="setFilter(index)" >{{ item }}</div>
+			<div v-for="(item, index) in itemTypeID" :key="index" class="btnItemType w-24 h-12 mr-3 my-1 py-3 rounded bg-yellow-700 text-white text-center cursor-pointer" @click="setFilter(index)" >{{ item }}</div>
 		</div>		
 		<div class="w-full lg:w-[900px] lg:mx-auto my-0 overflow-x-hidden overflow-y-auto">
 			<div v-if="liwaFilter.length > 0" class="w-full">

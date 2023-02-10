@@ -5,19 +5,24 @@
 	**********************************************************/
 	import { ref, onMounted } from "vue"
 	import { useFetch } from "@vueuse/core"
+	import queryString from "query-string"
 
+	const APIsvr = ref('')
 	const liwaData = ref([])
 
 	const loadData = async () => {
-		let sAPIsvr = window.sessionStorage.getItem('liwaAPIsvr')
-		let url = `${sAPIsvr}/WTerms_edit.php`
+		let keydata = {
+			'mainID': 'Terms'
+		}
+		let sQuery = queryString.stringify(keydata)	
+		let url = `${APIsvr.value}/WPages_haveDetail.php?${sQuery}`
 		const data = await useFetch(url, {method: 'GET'}, {refetch: true}).get().json()
-		liwaData.value = data.data.value.arrSQL[0]
-		// console.log('liwaData = ', liwaData.value)		
+		liwaData.value = data.data.value.arrSQL[0]	
 	}
 
 	onMounted(() => {
 		useHead({title:`會員合約`})
+		APIsvr.value = window.sessionStorage.getItem('liwaAPIsvr')
 		loadData()
 	})
 

@@ -5,6 +5,7 @@
   **********************************************************/
 	import { ref, onMounted, computed } from "vue"
   import { useFetch, createFetch } from "@vueuse/core"
+  import queryString from "query-string"
 
   const submitted = ref(false)
   const APIsvr = ref('')
@@ -14,7 +15,6 @@
     memberNM:'',
     mobile:''
   })
-
 
   const register = async () => {
     // 先檢查手機號碼是否已存在
@@ -40,11 +40,8 @@
     } else {
       // 將回傳的使用者資料設給 sessionStorage
       window.localStorage.setItem('liwaJWT', res.value.token)
-      window.sessionStorage.setItem('liwaUserID', res.value.memberID)
-      window.sessionStorage.setItem('liwaUserName', res.value.memberNM)
       window.sessionStorage.setItem('liwaIconPath', res.value.picpath)
       window.sessionStorage.setItem('liwaImgsvr', res.value.imgsvr)
-      window.sessionStorage.setItem('liwaUserGrade', res.value.grade)
       window.localStorage.setItem('liwaWelcome', 1)
 
       // 已通過註冊則跳到歡迎畫面
@@ -65,14 +62,14 @@
 
 <template>
 
-<div class="h-[calc(100vh_-_7rem)] bg-slate-200 flex justify-center items-start w-full">
+<div class="h-[calc(100vh_-_7rem)] bg-white flex justify-center items-start w-full">
   <div class="pt-4">
     <div class="bg-white m-2 rounded-xl max-w-md pb-1">
-      <div class="bg-white px-10 py-5 w-screen shadow-md max-w-sm">
-        <h1 class="text-center text-2xl font-semibold text-gray-600">會員註冊</h1>
+      <div class="bg-white px-10 py-5 w-screen max-w-sm">
+        <h1 class="text-center text-2xl font-semibold text-gray-600 underline underline-offset-8 decoration-orange-500 tracking-[1.5rem]">會員註冊</h1>
       </div>                
       <FormKit 
-        form-class="px-4 py-2 bg-yellow-200 rounded-2xl w-11/12"
+        form-class="px-8 py-8 bg-gray-200 rounded-2xl w-11/12 box-content"
         type="form"
         :form-class="submitted? 'hidden': 'block'"
         style="margin: 1rem auto;"
@@ -87,6 +84,7 @@
           placeholder="請輸入姓名"
           help="可輸入中英文名字(字數限制100字)"
           validation="required"
+          outer-class="mb-5"
         />        
         <FormKit
           name="mobile"
@@ -95,12 +93,18 @@
           placeholder="請輸入手機號碼"
           help="請輸入您的手機號碼, 共10碼, 無空白"
           validation="required|number|length:10"
+          outer-class="mb-5"
         />
       </FormKit>
       <div class="w-full pl-8 text-left text-red-400 text-md">{{ isMessage }}</div>
     </div> 
   </div> 
-
 </div>
 
 </template>
+
+<style scope>
+  .formkit-outer {
+    margin-bottom: 1.25rem;
+  }
+</style>

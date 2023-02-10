@@ -9,8 +9,10 @@
 	import VueSocialSharing from "vue-social-sharing"
 	import { IconFacebook, IconLine, IconLink45deg } from "@iconify-prerendered/vue-bi"
 	import { copyText } from "vue3-clipboard"
+	import queryString from "query-string"
 
 	const mainID = ref('')	
+	const APIsvr = ref('')
 	const fullPath = ref('')
 	const stitle = ref('')
 	const descp = ref('')
@@ -18,8 +20,11 @@
 	const route = useRoute()
 
 	const loadData = async () => {
-		let APIsvr = window.sessionStorage.getItem('liwaAPIsvr')
-		let url = `${APIsvr}/Blogs_haveDetail.php?mainID=${mainID.value}`
+		let keydata = {
+			'mainID': mainID.value
+		}
+		let sQuery = queryString.stringify(keydata)
+		let url = `${APIsvr.value}/Blogs_haveDetail.php?${sQuery}`
 		const data = await useFetch(url, {method: 'GET'}, {refetch: true}).get().json()
 		liwaData.value = data.data.value.arrSQL[0]
 		stitle.value = liwaData.value.title
@@ -40,6 +45,7 @@
 	onMounted(() => {
 		mainID.value = route.params.id
 		fullPath.value = route.fullPath
+		APIsvr.value = window.sessionStorage.getItem('liwaAPIsvr')
 		loadData()
 	})
 

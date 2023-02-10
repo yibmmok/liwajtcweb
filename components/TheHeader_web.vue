@@ -3,6 +3,7 @@
   import { useFetch, useStorage, useSessionStorage } from "@vueuse/core"
   import jwtDecode from "jwt-decode"
   import jsonData from "../static/init.json"
+  import { useChkauth } from "../composables/use-chkauth"
   import { IconList, IconSearch, IconPersonFill, IconHeartFill, IconInfoCircleFill } from '@iconify-prerendered/vue-bi'
   import { IconLogout } from '@iconify-prerendered/vue-iwwa'
 
@@ -13,13 +14,12 @@
 	const bIcon = ref(false) // 若已登入, 顯示使用者頭像
 	const objLogo = ref('')
 
-  const siteID = ref('')
   const userIcon = ref('')
   const APIsvr = ref('')
   const imgSvr = ref('')
   const fullPath = ref('')
   const searchString = ref('')
-
+  const siteIcon = ref('')
 	const route = useRoute() // Nuxt 3 native function
 
 	const jumpPage = () => {
@@ -52,64 +52,40 @@
     }
   }
 
+  const getSiteInfo = async () => {
+    let sAPIsvr = window.sessionStorage.getItem('liwaAPIsvr')
+    let url = `${sAPIsvr}/sys_haveSiteInfo.php`
+    const data = await useFetch(url, {method: 'GET'}, {refetch: true}).get().json()
+    siteIcon.value = data.data.value.message
+  }  
+
   const goLogout = () => {
     let NowLink = route.fullPath
     // 若從 Profile 登出, 跳到首頁
     if (NowLink == '/Profile') NowLink = '/'
     window.sessionStorage.setItem('liwaNowLink', NowLink)
-    window.sessionStorage.setItem('liwaUserID', '')
-    window.sessionStorage.setItem('liwaUserName', '')
-    window.sessionStorage.setItem('liwaIconPath', '')
-    window.sessionStorage.setItem('liwaUserGrade', '')
     window.localStorage.setItem('liwaJWT', '')
-
     bLogin.value = false
     window.location.href = NowLink
   }
 
-  const getUserIcon = computed(() => {
-    let AA = window.sessionStorage.getItem('liwaUserIconPath')
-    if ((AA == undefined) || (AA == "")) AA = "../static/man-icon.png"
-    return AA
-  })  
-	
 	onMounted(() => {
-    useHead({
-      titleTemplate: '珠寶動產交易中心 - %s',
-    })
-    // 先檢查 APIsvr是否存在? 若不存在, 從init.json取得
+    // 若無 APIsvr & Imgsvr, 從 init.json取得
     let sAPIsvr = window.sessionStorage.getItem('liwaAPIsvr')
     if ((sAPIsvr == undefined) || (sAPIsvr == "") || (sAPIsvr == null)) {
-      APIsvr.value = jsonData[0].APIsvr
-      imgSvr.value = jsonData[0].imgSvr
-      siteID.value = jsonData[0].siteID
-      window.sessionStorage.setItem('liwaAPIsvr', APIsvr.value)
-      window.sessionStorage.setItem('liwaImgsvr', imgSvr.value)
-      window.sessionStorage.setItem('liwaSiteID', siteID.value)
-      window.sessionStorage.setItem('liwaNowLink', '/')
+        window.sessionStorage.setItem('liwaAPIsvr', jsonData[0].APIsvr)
+        window.sessionStorage.setItem('liwaImgsvr', jsonData[0].imgSvr)
     }
+    // 取得 siteIcon
+    getSiteInfo()
     // 檢查是否已登入?(sessionStorage(liwa_JWT)) 
     let sJWT = window.localStorage.getItem('liwaJWT')
-    if ((sJWT == undefined) || (sJWT == "") || (sJWT == null) ) {
-
-    } else {
-      // 若曾登入, 判斷liwaUserID存在, 若不存在從liwaJWT解開
+    if (sJWT) {
       bLogin.value = true
-      let sUserID = window.sessionStorage.getItem('liwaUserID')
-      if (sUserID == null) {
-        // 若 sessionStorage.userID 為空, 解liwaJWT
-        var arrJWT = jwtDecode(sJWT)
-        useStorage('liwaUserID', arrJWT.sub, sessionStorage)
-        useStorage('liwaUserName', arrJWT.username, sessionStorage)
-        useStorage('liwaIconPath', arrJWT.picpath, sessionStorage)
-        useStorage('liwaUserGrade', arrJWT.grade, sessionStorage)
-        useStorage('liwaAPIsvr', arrJWT.APIsvr, sessionStorage)
-        useStorage('liwaImgsvr', arrJWT.imgsvr, sessionStorage)
-        userIcon.value = arrJWT.picpath
-      } else {
-        userIcon.value = window.sessionStorage.getItem('liwaImgsvr') + window.sessionStorage.getItem('liwaIconPath')
-      }      
-    }
+      let arrJWT = jwtDecode(sJWT)
+      // 取得 liwaIconPath (使用者圖檔)
+      userIcon.value = arrJWT.iconPath
+    } 
 	})
 </script>
 
@@ -118,16 +94,16 @@
         <div class="w-full flex flex-row justify-between items-start">
             <!-- Logo 欄 -->
             <div class="w-48 h-24 rounded-full -mt-2 -ml-4 text-3xl text-center cursor-pointer" @click="goIndex()">
-                <img src="../static/Logo_web.png" alt="" class="max-w-none mx-6 my-6" width="150" />
+                <img src="../static/Logo_web.jpg" alt="" class="max-w-none mx-6 my-6" width="150" />
             </div>
             <div class="w-[calc(100%_-_12rem)] lg:w-[calc(100%_-_4rem)] flex flex-row-reverse justify-start">
                 <!-- 登入,頭像, menu button -->
                 <!-- menu button -->
-                <div class="w-6 h-6 mt-4 cursor-pointer lg:hidden" @click="toggleMenu()">
-                  <IconList class="w-6 h-6 text-slate-400 font-bold" />
+                <div class="mt-4 cursor-pointer lg:hidden" @click="toggleMenu()">
+                  <IconList class="w-12 h-12 p-0 text-slate-800 font-bold" />
                 </div>  
-                <div v-if="bLogin==false" class="w-48 p-3 flex flex-row justify-center lg:justify-end">
-                  <div class="w-3/4 lg:w-1/2 h-12 pt-2 rounded bg-black text-white text-center cursor-pointer" @click="goLogin">登入
+                <div v-if="bLogin==false" class="mt-4 mr-4 flex flex-row justify-center lg:justify-end">
+                  <div class="px-8 py-2 rounded bg-black text-white text-center cursor-pointer leading-8" @click="goLogin">登入
                   </div>
                 </div>
                 <div v-else class="w-48 mx-1 mt-2 flex flex-row justify-end">
@@ -141,11 +117,11 @@
                 </div> 
                 <div class="hidden md:block w-[calc(100%_-_12rem)]">
                   <!-- Search bar -->
-                  <div class="w-96 h-12 mx-auto my-2 bg-white rounded-md border-2 border-slate-500 flex flex-row">
+                  <div class="w-96 h-12 mx-auto mt-4 bg-white rounded-md border-2 border-slate-500 flex flex-row">
                     <div class="w-[calc(100%_-_3rem)] h-12">
                       <input type="text" v-model="searchString" placeholder="站內搜尋欄" class="w-full ml-2 pt-2 float-left bg-white border-transparent focus:ring-0" @keyup.enter="goSearch">
                     </div>
-                    <div class="w-7 h-6 ml-1 mt-2 float-left cursor-pointer">
+                    <div class="ml-1 py-2 float-left cursor-pointer">
                       <IconSearch class="w-7 h-7 text-slate-400 font-bold" 
                       @click="" />
                     </div>                    
@@ -168,20 +144,22 @@
     </div>
     <!-- 下拉選單之用 -->
     <div 
-      class="w-full h-48 bg-slate-50 border-2 border-slate-200 absolute top-16 right-0 lg:hidden"
+      class="w-full bg-slate-50 border-2 border-slate-200 absolute top-16 right-0 lg:hidden z-40"
       v-if="isMenu==true"
     >
         <ul class="list-none bg-white">
-            <div v-if="bLogin" class="w-full py-4">
-              <li class="w-full h-12 ml-1 text-2xl"><a href="/Products?imode=1">我的收藏</a></li>
-              <li class="w-full h-12 ml-1 text-2xl"><a href="/Sellers?imode=1">我的追蹤</a></li>
-              <li class="w-full h-12 ml-1 text-2xl"><a href="/InfoCenter">資訊中心</a></li>
+            <div v-if="bLogin" class="w-full px-2 pt-4">
+              <li class="w-full p-1 text-lg border-b-2 border-b-gray-200"><a href="/Products?imode=1">我的收藏</a></li>
+              <li class="w-full p-1 text-lg border-b-2 border-b-gray-200"><a href="/Products?imode=2">已上架物件</a></li>
+              <li class="w-full p-1 text-lg border-b-2 border-b-gray-200"><a href="/InfoCenter">資訊中心</a></li>
               <hr />              
             </div>
-            <li class="w-full h-12 ml-1 text-2xl"><a href="/Statics">行情統計</a></li>
-            <li class="w-full h-12 ml-1 text-2xl"><a href="/Services">客服中心</a></li>
-            <li class="w-full h-12 ml-1 text-2xl"><a href="/QnA">常見Q&A</a></li>
-            <li class="w-full h-12 ml-1 text-2xl"><a href="/Blogs">部落格</a></li>
+            <div class="w-full px-2 pb-4">
+              <li class="w-full p-1 text-lg border-b-2 border-b-gray-200"><a href="/QnA">常見Q&A</a></li>
+              <li class="w-full p-1 text-lg border-b-2 border-b-gray-200"><a href="/Statics">行情統計</a></li>
+              <li class="w-full p-1 text-lg border-b-2 border-b-gray-200"><a href="/Services">客服中心</a></li>
+              <li class="w-full p-1 text-lg"><a href="/Blogs">部落格</a></li>              
+            </div>
         </ul>
     </div>    
 </template>

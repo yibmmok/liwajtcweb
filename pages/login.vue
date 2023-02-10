@@ -6,23 +6,27 @@
   **********************************************************/
 	import { ref, onMounted} from "vue"
 	import { useFetch, createFetch, useStorage } from "@vueuse/core"
+	import queryString from "query-string"
+	import liwaMsg from "../../components/liwaMsg.vue"
 
+	const APIsvr = ref('')
 	const submitted = ref(false)
 	const liwaData = ref({
 		'mobile':'',
-		'password':''
+		'password':'',
+		'siteKey': '6LfXLuwjAAAAAFXbAQPm82-X6ArjiMcEIEelQTXZ'
 	})
 	const res = ref({})
 	const msg = ref('')
+	// const { executeRecaptcha, recaptchaLoaded } = useReCaptcha()
 
 	const submitlogin = async () => {
-		let APIsvr = window.sessionStorage.getItem('liwaAPIsvr')
 		// liwaData 加入jwttoken pair
-		const jwt = useStorage('liwaJWT')
-		liwaData.value.jwttoken = ((jwt.value === 'undefined') || (jwt.value === ""))? '' : jwt.value
+		let sJWT = window.localStorage.getItem('liwaJWT')
+		liwaData.value.JWT = ((sJWT === 'undefined') || (sJWT === ''))? '' : sJWT
 		let datastr = JSON.stringify(liwaData.value)
 		const useMyFetch = createFetch({
-		  baseUrl: APIsvr,
+		  baseUrl: APIsvr.value,
 		  options: {},
 		  fetchOptions: {
 		    mode: 'cors',
@@ -38,12 +42,7 @@
 		if (res.value.message == "") {
 			// Login 成功, 先設定 sessionStorage
 			window.localStorage.setItem('liwaJWT', res.value.token)
-			window.sessionStorage.setItem('liwaUserID', res.value.memberID)
-			window.sessionStorage.setItem('liwaUserName', res.value.memberNM)
-			window.sessionStorage.setItem('liwaIconPath', res.value.picpath)
-			window.sessionStorage.setItem('liwaImgsvr', res.value.imgsvr)
-			window.sessionStorage.setItem('liwaUserGrade', res.value.grade)	
-			window.sessionStorage.setItem('liwaSiteID', res.value.siteID)
+			window.sessionStorage.setItem('liwaUserIconPath', res.value.picpath)
 			window.sessionStorage.setItem('liwaImgsvr', res.value.imgsvr)
 			window.sessionStorage.setItem('liwaAPIsvr', res.value.apisvr)
 			//取得 liwaNowLink, 若 liwaNowLink !== '/', 跳到 liwaNowLink, 否則 /Profile
@@ -51,6 +50,7 @@
 			window.location.href=(NowLink !== '/') ? NowLink : '/Profile'
 		} else {
 			msg.value = res.value.message
+
 		}
 	}
 
@@ -59,12 +59,12 @@
 		let sMobile = liwaData.value.mobile
 		if (sMobile) {
 			let passData = {
-				'memberID': window.sessionStorage.getItem('liwaUserID'),
+				// 'JWT': window.localStorage.getItem('liwaJWT'),
 				'mobile': sMobile
 			}
 			let datastr = JSON.stringify(passData)
 		    const useMyFetch = createFetch({
-		      baseUrl: window.sessionStorage.getItem('liwaAPIsvr'),
+		      baseUrl: APIsvr.value,
 		      fetchOptions: {
 		        mode: 'cors',
 		        headers: new Headers({
@@ -73,13 +73,19 @@
 		        body: datastr
 		      }
 		    })
-		    const { data } = await useMyFetch('sys_resendPSWD.php').post().json()
+		    const { data } = await useMyFetch('sys_webresetPSWD.php').post().json()
 		    // 回傳2個結果: 1.發送成功, 2.發送失敗, 都顯示在msg
+		    let sMsg = data.value.message
+		    if (sMsg) msg.value = data.value.message
+		    else msg.value = data.value.key
+		} else {
+			msg.value = '請輸入註冊時的手機號碼'
 		}
 	}
 
 	onMounted(() => {
 		useHead({title:`登入`})
+		APIsvr.value = window.sessionStorage.getItem('liwaAPIsvr')
 	})
 
 	definePageMeta({
@@ -95,12 +101,12 @@
 	</div>
 	<div class="mt-2 pt-4 bg-white">
 		<div class="bg-white m-2 rounded-xl max-w-sm pb-1">
-			<div class="bg-white px-10 py-5 w-screen shadow-md max-w-sm">
-				<h1 class="text-center text-2xl font-semibold text-gray-600">會員登入</h1>
+			<div class="bg-white px-10 py-5 w-screen max-w-sm">
+				<h1 class="text-center text-2xl font-semibold text-gray-600 underline underline-offset-8 decoration-orange-500 tracking-[1.5rem]">會員登入</h1>
 			</div>
 		</div>
 		<FormKit 
-		form-class="px-4 py-2 bg-yellow-200 rounded-2xl w-11/12"
+		form-class="px-4 py-2 bg-gray-100 rounded-2xl w-11/12"
 		v-model="liwaData"
 		type="form"
 		:form-class="submitted? 'hidden': 'block'"
@@ -123,14 +129,18 @@
 	          help="請輸入密碼"
 	          :validation="required"
 	        />
+<!-- 	        <div class="w-full h-12 my-2">
+	        	<div class="w-32 h-12 bg-emerald-400 text-white py-2 text-center" @click="recaptcha">我不是機器人</div>
+	        </div> -->
+	        
 		</FormKit>
 		<div v-if="msg" class="w-full h-8 bg-white pl-4 text-red-400 mb-4">
 			{{ msg }}
 		</div>
-		<div class="w-full flex flex-row justify-start text-indigo-400">
-			<div class="w-1/2 h-8 bg-white text-left pl-4" @click="resetPswd">忘記密碼
+		<div class="w-full flex flex-row justify-start text-red-400">
+			<div class="w-1/2 h-8 bg-white text-left pl-4 cursor-pointer" @click="resetPswd">忘記密碼
 			</div>
-			<div class="w-1/2 h-8 text-red-400 text-right pr-4">
+			<div class="w-1/2 h-8 text-indigo-400 text-right pr-4 cursor-pointer">
 				<NuxtLink to="/regis">
 					<div>註冊</div>
 				</NuxtLink>				
@@ -139,3 +149,9 @@
 	</div>  
 </div>
 </template>
+
+<style scope>
+  .formkit-outer {
+    margin-bottom: 1.25rem;
+  }
+</style>

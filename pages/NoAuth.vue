@@ -16,12 +16,14 @@
 
   definePageMeta({
     colorMode:'light',
-    layout:"web",
+    layout:"default",
   })  
 </script>
 
 <template>
-	<div class="w-full lg:w-[900px] mx-auto px-16">
-		<img :src="picpath" alt="">
-	</div>
+  <div class="w-full h-[100vh] lg:h-[calc(100vh_-_130px)]">
+    <div class="sm:w-full lg:w-[900px] mx-auto px-16 pt-8">
+      <img :src="picpath" alt="">
+    </div>    
+  </div>
 </template>

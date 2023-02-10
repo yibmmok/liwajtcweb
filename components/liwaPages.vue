@@ -29,7 +29,7 @@
 			// 若總頁數少於arrPage.length的處理
 			for(let i=0; i<state.totalPage; i++) {
 				// 為當前頁設定class
-				actvClass = (i == (state.page-1)) ? ' bg-pink-600 text-white': ''
+				actvClass = (i == (state.page-1)) ? ' bg-pink-600 text-white': 'bg-gray-200'
 				arrPage.value[i] = {
 					isShow: true,
 					sVal: i+1,
@@ -41,7 +41,7 @@
 			let pageLimit = (useShowmode() > 1)? 6 : 4
 			let pageRange = (useShowmode() > 1)? 8 : 6 // dynamic pages 頁位
 			for(let i=0; i<totItems; i++) {
-				actvClass = (state.page == (i+1))?' bg-pink-600 text-white':''
+				actvClass = (state.page == (i+1))?' bg-pink-600 text-white':'bg-gray-200'
 				arrPage.value[i] = {
 					isShow: true,
 					sVal: i+1,
@@ -56,7 +56,7 @@
 			if ((iStart - iStartLimit) >2) {
 				// 若非最末段頁, 設定dynamic pages 的頁碼段
 				for(let j=2; j < (totItems - 1); j++) {
-					actvClass = (iStart==state.page) ? ' bg-pink-600 text-white': ''
+					actvClass = (iStart==state.page) ? ' bg-pink-600 text-white': 'bg-gray-200 text-black'
 					arrPage.value[j] = {
 						isShow: true,
 						sVal: iStart,
@@ -72,13 +72,13 @@
 						isShow: true,
 						sVal: '...',
 						pageID: superPrev,
-						activeClass: ''
+						activeClass: 'bg-gray-200 text-black'
 					}
 				} 
 			} else {	
 				// 	若最末段頁, 設定dynamic pages的頁碼段		
 				for(let j=2; j < pageRange; j++) {
-					actvClass = (j==state.page-1) ? ' bg-pink-600 text-white': ''
+					actvClass = (j==state.page-1) ? ' bg-pink-600 text-white': 'bg-gray-200 text-black'
 					arrPage.value[j] = {
 						isShow: true,
 						sVal: j+1,
@@ -89,7 +89,7 @@
 				}				
 			}
 			// 設定總頁數位
-			actvClass = (state.page == (state.totalPage))?' bg-pink-600 text-white':''
+			actvClass = (state.page == (state.totalPage))?' bg-pink-600 text-white':' bg-gray-200 text-black'
 			let lastItem = totItems - 1
 			arrPage.value[lastItem] = {
 				isShow: true,
@@ -111,7 +111,7 @@
 					isShow: true,
 					sVal: '...',
 					pageID: superNext,
-					activeClass: ''
+					activeClass: 'bg-gray-200 text-black'
 				}
 			} else {
 				// 跳到下個頁段
@@ -158,7 +158,7 @@
 				isShow: false,
 				sVal: 1,
 				pageID: 1,
-				activeClass: ''
+				activeClass: 'bg-gray-200 text-black'
 			})
 			arrPage.value = tmpPage
 		} else {
@@ -166,7 +166,7 @@
 				isShow: false,
 				sVal: 1,
 				pageID: 1,
-				activeClass: ''
+				activeClass: 'bg-gray-200 text-black'
 			})	
 			arrPage.value = tmpPage1
 		}
@@ -192,7 +192,7 @@
 	        >	        
 	            <div 
 	            	v-if="pageItem.isShow"
-	            	class="w-8 mr-1 md:mr-2 flex justify-center items-center  cursor-pointer leading-8 transition duration-150 ease-in rounded-full bg-gray-200 "
+	            	class="w-8 mr-1 md:mr-2 flex justify-center items-center  cursor-pointer leading-8 transition duration-150 ease-in rounded-full "
 	            	:class="pageItem.activeClass"
 	            	:data-pageID="pageItem.pageID"
 	            	@click="jumpPage(pageItem.pageID)"

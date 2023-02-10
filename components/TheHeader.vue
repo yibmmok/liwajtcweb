@@ -6,15 +6,16 @@
 	import { ref, onMounted, computed } from 'vue'
 	import { useFetch, useStorage, useSessionStorage } from "@vueuse/core"
 	import jwtDecode from "jwt-decode"
+	import { IconPersonFill, IconQuestionCircleFill, IconSearch } from "@iconify-prerendered/vue-bi"
+	import { useChkauth } from "../composables/use-chkauth"
+	import jsonData from "../static/init.json"
 
 	// const { $rmallSessionStorage } = useNuxtApp()
 	const bLogin = ref(false)
 	const bIcon = ref(false)
 	const objLogo = ref('')
-
-	const siteID = ref('')
 	const siteName = ref('')
-	const siteIcon = ref('../static/logo_square.png')
+	const siteIcon = ref('')
 	const userIcon = ref('')
 
 	const route = useRoute() // Nuxt 3 native function
@@ -23,25 +24,34 @@
 		return '/A03'
 	}
 
+	const getSiteInfo = async () => {
+		let sAPIsvr = window.sessionStorage.getItem('liwaAPIsvr')
+		let url = `${sAPIsvr}/sys_haveSiteInfo.php`
+		const data = await useFetch(url, {method: 'GET'}, {refetch: true}).get().json()
+		siteIcon.value = data.data.value.message
+		siteName.value = data.data.value.key
+	}
+
 	const logout = () => {
-		let sSiteID = window.sessionStorage.getItem('liwaSiteID')
-		if (sSiteID !== 'sys') {
-			window.sessionStorage.setItem('liwaSiteIcon', "")
-			window.sessionStorage.setItem('liwaSiteName', 'Liwasite')
-			window.sessionStorage.setItem('liwaAuth', "")
-			window.sessionStorage.setItem('liwaUGroupID', "")
-			window.sessionStorage.setItem('liwaUGroupName', "")
-			window.sessionStorage.setItem('liwaSiteID', 'sys')
-			window.location.href="/Profile"
-		} else {
-			window.sessionStorage.setItem('liwaUserID', "")
-			window.sessionStorage.setItem('liwaUserName', "")
-			window.sessionStorage.setItem('liwaUserIconPath', "")
-			window.sessionStorage.setItem('liwaImgsvr', "")
-			window.sessionStorage.setItem('liwaAPIsvr', "")
-			window.localStorage.setItem('liwaJWT', '')
-			window.location.href="/"
-		}		
+		window.sessionStorage.setItem('liwaUserIconPath', "")
+		window.localStorage.setItem('liwaJWT', '')
+		window.location.href="/"		
+		// let sSiteID = window.sessionStorage.getItem('liwaSiteID')
+		// if (sSiteID !== 'sys') {
+		// 	window.sessionStorage.setItem('liwaSiteIcon', "")
+		// 	window.sessionStorage.setItem('liwaSiteName', 'Liwasite')
+		// 	window.sessionStorage.setItem('liwaAuth', "")
+		// 	window.sessionStorage.setItem('liwaSiteID', 'sys')
+		// 	window.location.href="/Profile"
+		// } else {
+		// 	window.sessionStorage.setItem('liwaUserID', "")
+		// 	window.sessionStorage.setItem('liwaUserName', "")
+		// 	window.sessionStorage.setItem('liwaUserIconPath', "")
+		// 	window.sessionStorage.setItem('liwaImgsvr', "")
+		// 	window.sessionStorage.setItem('liwaAPIsvr', "")
+		// 	window.localStorage.setItem('liwaJWT', '')
+		// 	window.location.href="/"
+		// }		
 	}
 
 	const goLink = () => {
@@ -52,52 +62,32 @@
 	const goProfile = () => {
 		window.location.href='/Profile'
 	}
-
-	const getUserIcon = computed(() => {
-		return window.sessionStorage.getItem('liwaUserIconPath')
-	})
 	
 	onMounted(() => {
+		// 若無 APIsvr & Imgsvr, 從 init.json取得
+		let sAPIsvr = window.sessionStorage.getItem('liwaAPIsvr')
+		if ((sAPIsvr == undefined) || (sAPIsvr == "") || (sAPIsvr == null)) {
+				window.sessionStorage.setItem('liwaAPIsvr', jsonData[0].APIsvr)
+				window.sessionStorage.setItem('liwaImgsvr', jsonData[0].imgSvr)
+		}
+		// 取得 siteIcon, siteName from composables程式
+		getSiteInfo()
 		// 檢查是否已登入?(sessionStorage(liwa_JWT))	
     	let sJWT = window.localStorage.getItem('liwaJWT')
-    	siteID.value = window.sessionStorage.getItem('liwaSiteID')
-    	siteName.value = (siteID.value == 'sys')? 'Liwasite': window.sessionStorage.getItem('liwaSiteName')
-    	if ((sJWT == undefined) || (sJWT == "") || (sJWT == null) ) {
-    		siteName.value = 'Liwasite'
-    		// 將 liwaSiteID設為sys
-    		if ((siteID.value == undefined) || (siteID.value == "") || (siteID.value == null)) 
-    			useStorage('liwaSiteID', 'sys', sessionStorage)
-    	} else {
+    	if (sJWT) {
     		bLogin.value = true
-    		let sUserID = window.sessionStorage.getItem('liwaUserID')
-    		if (sUserID == null) {
-    			// 若 sessionStorage.userID 為空, 解liwaJWT
-	    		var arrJWT = jwtDecode(sJWT)
-	    		useStorage('liwaUserID', arrJWT.sub, sessionStorage)
-	    		useStorage('liwaUserName', arrJWT.username, sessionStorage)
-	    		useStorage('liwaIconPath', arrJWT.iconPath, sessionStorage)
-	    		useStorage('liwaSiteID', arrJWT.siteID, sessionStorage)
-	    		useStorage('liwaSiteIcon', arrJWT.siteIcon, sessionStorage)
-	    		useStorage('liwaSiteName', arrJWT.siteName, sessionStorage)
-	    		useStorage('liwaAuth', arrJWT.auth, sessionStorage)
-	    		useStorage('liwaUGroupID', arrJWT.uGroupID, sessionStorage)
-	    		useStorage('liwaUGroupName', arrJWT.uGroupName, sessionStorage)
-	    		useStorage('liwaImgsvr', arrJWT.imgsvr, sessionStorage)
-	    		useStorage('liwaAPIsvr', arrJWT.apisvr, sessionStorage)
-	    		userIcon.value = arrJWT.iconPath
-	    		if (arrJWT.siteID !== 'sys') {
-	    			siteIcon.value = arrJWT.imgsvr + arrJWT.siteIcon
-	    			siteName.value = arrJWT.siteName
-	    		} else {
-	    			siteIcon.value = arrJWT.imgsvr+'/syspics/logo_square.png'
-	    		}
-
-    		} else {
-    			userIcon.value = window.sessionStorage.getItem('liwaSiteIcon')
-    			siteIcon.value = window.sessionStorage.getItem('liwaImgsvr') + window.sessionStorage.getItem('liwaSiteIcon')
-    		} 
-    		bLogin.value = true
-    	} 
+    		let arrJWT = jwtDecode(sJWT)
+    		let sUrl = route.fullPath
+    		let arrUrl = sUrl.split("/")
+    		let progID = arrUrl[1]
+			// 判斷 userAuth > progAuth <-- 從composables 取得
+			useChkauth(progID).then(res => {
+				let msg = JSON.parse(res.value).message
+				if (msg) window.location.href = msg
+			})
+			// 取得 liwaIconPath (使用者圖檔)
+    		userIcon.value = arrJWT.iconPath
+    	}
 	})
 </script>
 
@@ -125,31 +115,17 @@
 				</div>
 				<a :href="jumpPage()">
 					<div class="sysIcon help mx-1 mt-1">
-						<svg width="50px" height="50px" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-							<path d="M256,80A176,176,0,1,0,432,256,176,176,0,0,0,256,80Z" style="fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px"/>
-							<path d="M200,202.29s.84-17.5,19.57-32.57C230.68,160.77,244,158.18,256,158c10.93-.14,20.69,1.67,26.53,4.45,10,4.76,29.47,16.38,29.47,41.09,0,26-17,37.81-36.37,50.8S251,281.43,251,296" style="fill:none;stroke:#000;stroke-linecap:round;stroke-miterlimit:10;stroke-width:28px"/>
-							<circle cx="250" cy="348" r="20"/>
-						</svg>					
+						<IconQuestionCircleFill class="w-7 h-7 text-red-500 font-bold" />
 					</div>
 				</a>
 				<div class="sysIcon search mx-1 mt-3">
-					<svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-						 viewBox="0 0 487.95 487.95" style="enable-background:new 0 0 487.95 487.95;" xml:space="preserve" width="35px" height="35px">
-							<path d="M481.8,453l-140-140.1c27.6-33.1,44.2-75.4,44.2-121.6C386,85.9,299.5,0.2,193.1,0.2S0,86,0,191.4s86.5,191.1,192.9,191.1 								c45.2,0,86.8-15.5,119.8-41.4l140.5,140.5c8.2,8.2,20.4,8.2,28.6,0C490,473.4,490,461.2,481.8,453z M41,191.4 c0-82.8,68.2-150.1,151.9-150.1s151.9,67.3,151.9,150.1s-68.2,150.1-151.9,150.1S41,274.1,41,191.4z"/>
-					</svg>					
+					<IconSearch class="w-7 h-7 text-black font-bold" />
 				</div>
-				<div class="sysIcon userIcon mx-1 mt-2" @click="goProfile()">
-					<img v-if="bIcon" :src="getUserIcon()" width="42" height="42" />
-					<svg v-else version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-						 viewBox="0 0 459 459" style="enable-background:new 0 0 459 459;" xml:space="preserve" width="42px" height="42px">
-						<g style="fill:#BBB;stroke:#333;stroke-width:12px;stroke-linecap:round;stroke-linejoin:round;">
-							<path d="M229.5,0C102.53,0,0,102.845,0,229.5C0,356.301,102.719,459,229.5,459C356.851,459,459,355.815,459,229.5
-									C459,102.547,356.079,0,229.5,0z M347.601,364.67C314.887,393.338,273.4,409,229.5,409c-43.892,0-85.372-15.657-118.083-44.314
-									c-4.425-3.876-6.425-9.834-5.245-15.597c11.3-55.195,46.457-98.725,91.209-113.047C174.028,222.218,158,193.817,158,161
-									c0-46.392,32.012-84,71.5-84c39.488,0,71.5,37.608,71.5,84c0,32.812-16.023,61.209-39.369,75.035
-									c44.751,14.319,79.909,57.848,91.213,113.038C354.023,354.828,352.019,360.798,347.601,364.67z"/>
-						</g>
-					</svg>
+				<div v-if="bIcon" class="sysIcon userIcon mx-1 mt-2" @click="goProfile()">
+					<img :src="userIcon" width="42" height="42" />
+				</div>
+				<div v-else class="sysIcon userIcon mx-1 mt-2" @click="goProfile()">
+					<IconPersonFill class="w-7 h-7 text-orange-400 font-bold" />
 				</div>
 			</div>
 			<div v-else class="mt-3">

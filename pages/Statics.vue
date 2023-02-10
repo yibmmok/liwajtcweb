@@ -1,7 +1,7 @@
 <script setup lang="ts">
 	/*********************************************************
-	prog name: 關於我們, author: James Lin, date: 2022/12/31
-	To Do: 缺內容
+	prog name: 行情統計, author: James Lin, date: 2023/02/10
+	To Do: 上架物件的行情統計
 	**********************************************************/
 	import { ref, onMounted } from "vue"
 	import { useFetch } from "@vueuse/core"
@@ -12,30 +12,30 @@
 
 	const loadData = async () => {
 		let keydata = {
-			'mainID': 'About'
+			'mainID': 'Statics'
 		}
 		let sQuery = queryString.stringify(keydata)	
 		let url = `${APIsvr.value}/WPages_haveDetail.php?${sQuery}`
 		const data = await useFetch(url, {method: 'GET'}, {refetch: true}).get().json()
-		liwaData.value = data.data.value.arrSQL[0]	
+		liwaData.value = data.data.value.arrSQL[0]
 	}
 
 	onMounted(() => {
-		useHead({title:'關於二手珠寶動產交易中心'})
+		useHead({title:`行情統計`})
 		APIsvr.value = window.sessionStorage.getItem('liwaAPIsvr')
 		loadData()
 	})
 
 	definePageMeta({
 	  layout: "web",
-	  colorMode: "light"
+	  colorMode: 'light'
 	})		
 
 </script>
 
 <template>
 	<!-- <div class="w-full lg:w-[900px] mx-auto my-4" v-html="liwaData.sContent"></div> -->
-	<div class="w-full lg:w-[900px] mx-auto pt-[280px] text-6xl text-center">網頁建置中...</div>	
+	<div class="w-full lg:w-[900px] mx-auto pt-[280px] text-6xl text-center">網頁建置中...</div>
 </template>
 
 <style scope>

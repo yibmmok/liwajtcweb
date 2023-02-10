@@ -19,7 +19,7 @@
 
 	const error = ref('')
 	const paramstr = ref('')
-	const siteID = ref('')
+	const APIsvr = ref('')
 	const liwaData = ref([])
 	const page = ref(1)
 	const pageSize = ref(10)
@@ -30,15 +30,12 @@
 	})
 
 	const loadData = async () => {
-		let APIsvr = window.sessionStorage.getItem('liwaAPIsvr')
-		let memberID = window.sessionStorage.getItem('liwaUserID')
 		let keydata = {
-			'siteID': siteID.value,
-			'userID': memberID,
+			'JWT': window.localStorage.getItem('liwaJWT'),
 			'param': paramstr.value
 		}
 		let sQuery = queryString.stringify(keydata)
-		let url = `${APIsvr}/w021_havelist.php?${sQuery}`
+		let url = `${APIsvr.value}/w021_havelist.php?${sQuery}`
 		const data = await useFetch(url, {method: 'GET'}, {refetch: true}).get().json()
 		liwaData.value = data.data.value.arrSQL
 		// console.log('liwaData =', liwaData.value)
@@ -52,9 +49,10 @@
 		let objParam = queryString.parseUrl(state.sUrl)
 		let objQuery = objParam.query
 		let datastr = JSON.stringify(objQuery)
+	console.log('datastr =', datastr)
 		// 設定過濾參數
 		paramstr.value = (datastr)? datastr : ''
-		siteID.value = window.sessionStorage.getItem('liwaSiteID')	
+		APIsvr.value = window.sessionStorage.getItem('liwaAPIsvr')	
 		loadData()
 	})		
 

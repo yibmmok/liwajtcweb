@@ -5,10 +5,12 @@
     **********************************************************/	
     import { ref, onMounted } from "vue"
     import { useFetch, createFetch, useTitle } from "@vueuse/core"
+    import queryString from "query-string"
     import { IconChevronDown, IconChevronUp } from '@iconify-prerendered/vue-bi'
 
-    const isShow = ref(false)
+    // const isShow = ref(false)
     const iValue = ref(-1)
+    const APIsvr = ref('')
     const liwaData = ref([])
 
     const toggleShow = (idx) => {
@@ -19,14 +21,14 @@
     }
 
     const loadData = async () => {
-        let sAPIsvr = window.sessionStorage.getItem('liwaAPIsvr')
-        let url = `${sAPIsvr}/WQnA_havelist.php`
+        let url = `${APIsvr.value}/WQnA_havelist.php`
         const data = await useFetch(url, {method: 'GET'}, {refetch: true}).get().json()
-        liwaData.value = data.data.value.arrSQL      
+        liwaData.value = data.data.value.arrSQL     
     }
 
     onMounted(() => {
         useHead({title:`常見Q&A`})
+        APIsvr.value = window.sessionStorage.getItem('liwaAPIsvr') 
         loadData()
     })
 
@@ -37,10 +39,10 @@
 </script>
 
 <template>
-<div class="w-full h-[800px] lg:w-[1024px] lg:mx-auto">
-    <div class="w-full h-[80vh]">
+<div class="w-full lg:w-[1024px] lg:mx-auto">
+    <div class="w-full ">
         <!-- 網頁內容由此開始 -->
-		<div v-if="liwaData.length" class="w-full mt-5 bg-slate-100 relative">
+		<div v-if="liwaData.length" class="w-full min-h-[80vh] mt-5 overflow-x-hidden overflow-y-auto bg-white relative">
 			<div
 				v-for="(ques,index) in liwaData"
 				:key="index"
@@ -49,7 +51,7 @@
 				<div class="w-full flex flex-row cursor-pointer">
 					<div class="w-[calc(100%_-_2rem)] text-2xl font-semibold text-black-500 mt-5 ml-3">{{ ques.question }}
 					</div>
-					<div class="w-8 pt-2" @click="toggleShow(index)">
+					<div class="w-8 pt-6" @click="toggleShow(index)">
                         <IconChevronDown v-if="ques.isShow=='0'" class="w-7 h-7 text-slate-500 font-bold" />
                         <IconChevronUp v-else class="w-7 h-7 text-slate-500 font-bold" />
 					</div>	
@@ -61,10 +63,16 @@
 				>
 					<div 
                         v-html="ques.answer"
-                        class="text-md mt-5 ml-3 bg-white"></div>			
+                        class="pAns text-md mt-5 ml-3 bg-slate-100"></div>			
 				</div>					
 			</div>
 		</div>
 	</div>
 </div>
 </template>
+
+<style scope>
+    .pAns p{
+        line-height:30px;
+    }
+</style>

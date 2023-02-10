@@ -6,12 +6,19 @@
 	**********************************************************/	
 	import { ref, reactive, onMounted, computed } from "vue"
 	import { useStorage, useFetch, createFetch } from "@vueuse/core"
+	import queryString from "query-string"
 	import TinyMceEditor from "@tinymce/tinymce-vue"
 	import liwaObjList from "../components/liwaObjList.vue"
+	import liwaSimpleTbl from "../components/liwaSimpleTbl.vue"
+	import { IconChevronDown, IconChevronUp } from '@iconify-prerendered/vue-bi'
 
+	const debug = ref(1)
 	const mainID = ref('')
 	const step = ref('A02')
 	const liwaData = ref({})
+	const liwaD01 = ref([])
+	const liwaD02 = ref([])
+	const APIsvr = ref('')
 	const submitted = ref(false)
 	const submitted2 = ref(false)
 	const newpass1 = ref('')
@@ -25,24 +32,21 @@
 	const sContent = ref('')
 	const liwaEditor = ref(null)
 	const isEditor = ref(true)
+	const C01_totalAmt = ref(0)
+	const C02_totalAmt = ref(0)
+	const C03_totalAmt = ref(0)
+	const isMsg = ref(false)
+	const inFund = ref(0)
+	const outFund = ref(0)
+	const iValueD01 = ref(-1)
+	
+	const D02_Comment = ref('')
+	const iValueD02 = ref(-1)
+	const sysIcon = ref('')
 
 	const setActive = (sID) => {
 		let sGroup = sID.substr(0, 1)
-		switch (sGroup) {
-			case 'A':
-				step.value = sID
-				break
-			case 'B':
-				step.value = sID
-				break;	
-			case 'C':
-				step.value = 'C00'
-				break
-			case 'D':
-				step.value = sID
-				break
-		}
-	
+		step.value = sID
 	}
 
 	// 圖檔處理 starts
@@ -100,7 +104,7 @@
 	    toolbar: 'fullscreen | undo redo | blocks |  forecolor backcolor | indent outdent | emoticons | link image | bold italic | help',
 	    file_picker_callback: function(callback, value, meta) {
 		  	if (meta.filetype == 'image') {
-		  // 		const imgInput = document.createElement('input')
+		  		// const imgInput = document.createElement('input')
 				// imgInput.setAttribute('type', 'file');
 				// imgInput.setAttribute('accept', 'image/*');
 				imgInput2.value.addEventListener('change', (e) => {
@@ -118,17 +122,37 @@
 	// liwaEditor ends
 
 	const loadData = async () => {
-		mainID.value = window.sessionStorage.getItem('liwaUserID')
-		let url= window.sessionStorage.getItem('liwaAPIsvr') + "/Prof_web.php?siteID=" + window.sessionStorage.getItem('liwaSiteID') + "&userID=" + mainID.value
+		let keydata = {
+			'JWT': window.localStorage.getItem('liwaJWT')
+		}
+		let sQuery = queryString.stringify(keydata)
+		let url = `${APIsvr.value}/wProf_web.php?${sQuery}`
 		const data = await useFetch(url, {method: 'GET'}, {refetch: true}).get().json()
 		liwaData.value = data.data.value.arrSQL[0]
-	
 		liwaData.value.action = 'edit'
-		liwaData.value.mainID = mainID.value
-		liwaData.value.siteID = window.sessionStorage.getItem('liwaSiteID')
-		liwaData.value.userID = mainID.value
-		liwaData.value.makerName = window.sessionStorage.getItem('liwaUserName')
 	}	
+
+	const loadD01 = async () => {
+		let keydata = {
+			'JWT': window.localStorage.getItem('liwaJWT')
+		}
+		let sQuery = queryString.stringify(keydata)
+		let url = `${APIsvr.value}/wProf_005M.php?${sQuery}`
+		const data = await useFetch(url, {method: 'GET'}, {refetch: true}).get().json()
+		liwaD01.value = data.data.value.arrSQL
+		liwaD01.value.forEach((m) => m.isShow = 0)
+	}
+
+	const loadD02 = async () => {
+		let keydata = {
+			'JWT': window.localStorage.getItem('liwaJWT')
+		}
+		let sQuery = queryString.stringify(keydata)
+		let url = `${APIsvr.value}/wProf_007.php?${sQuery}`
+		const data = await useFetch(url, {method: 'GET'}, {refetch: true}).get().json()
+		liwaD02.value = data.data.value.arrSQL
+		liwaD02.value.forEach((n) => n.isShow = 0)
+	}
 
 	const saveData = async () => {
 		//  若 iconSrc.substr(0, 5)=='', liwaData.value.picpath = iconSrc
@@ -137,12 +161,10 @@
 		if (sContent.value) {
 			liwaData.value.userBrief = sContent.value
 		}
-
+		liwaData.value.JWT = window.localStorage.getItem('liwaJWT')
 		let datastr = JSON.stringify(liwaData.value)
-	console.log('datastr =', datastr)
-
 	    const useMyFetch = createFetch({
-	      baseUrl: window.sessionStorage.getItem('liwaAPIsvr'),
+	      baseUrl: APIsvr.value,
 	      fetchOptions: {
 	        mode: 'cors',
 	        headers: new Headers({
@@ -151,21 +173,73 @@
 	        body: datastr
 	      }
 	    })
-	    const { data } = await useMyFetch('Prof_webedit.php').post().json()	
+	    const { data } = await useMyFetch('wProf_webedit.php').post().json()	
 	 	console.log('data =', data.value)
 	 	
+	}
+
+	const saveD02 = async () => {
+		console.log('D02_Comment =', D02_Comment.value)
+		if (D02_Comment.value) {
+			let keydata = {
+				'JWT': window.localStorage.getItem('liwaJWT'),
+				'sContent': D02_Comment.value
+			}
+			let datastr = JSON.stringify(keydata)
+		    const useMyFetch = createFetch({
+		      baseUrl: APIsvr.value,
+		      fetchOptions: {
+		        mode: 'cors',
+		        headers: new Headers({
+		          'Content-Type': 'application/json; charset=utf-8'
+		        }),
+		        body: datastr
+		      }
+		    })
+		    const { data } = await useMyFetch('wProf_D02edit.php').post().json()	
+		 	if (!data.value.message) {
+		 		D02_Comment.value = ''
+		 		loadD02()
+		 	} else {
+		 		showMsg('存檔錯誤', data.value.message, 2)
+		 	}				
+		 }
 	}	
+
+	// 訊息對話盒相關 starts
+	const objMsg = ref({
+		title: '',
+		body: '',
+		modalType: ''
+	})
+	
+	const showMsg = (sTitle, sBody, iType = 1) => {
+  		objMsg.value.title = sTitle
+  		objMsg.value.body = sBody
+  		objMsg.value.modalType = iType
+  		isMsg.value = true
+	}
+
+	const hideMsg = () => {
+		isMsg.value = false
+	}
+
+	const confirmOK = () => {
+		alert("Press the Confirm button")
+		isMsg.value = false
+	}
+	// 設定對話盒相關 ends		
 
 	const resetPSWD = async () => {
 		let passData = { 
-			"siteID": window.sessionStorage.getItem('liwaSiteID'),
-			"mainID": window.sessionStorage.getItem('liwaUserID'),
-			"username": window.sessionStorage.getItem('liwaUserName'),
-			"pswd": newpass1.value 
+			"JWT": window.localStorage.getItem('liwaJWT'),
+			"pswd": newpass1.value,
+			"debug": debug.value
 		}
 		let datastr = JSON.stringify(passData)
+		// console.log('datastr =', datastr)
 	    const useMyFetch = createFetch({
-	      baseUrl: window.sessionStorage.getItem('liwaAPIsvr'),
+	      baseUrl: APIsvr.value,
 	      fetchOptions: {
 	        mode: 'cors',
 	        headers: new Headers({
@@ -177,6 +251,111 @@
 	    const { data } = await useMyFetch('sys_webresetPSWD.php').post().json()
 	}
 
+	const loadTotal_C01 = async () => {
+		let keydata = {
+			'JWT': window.localStorage.getItem('liwaJWT')
+		}
+		let sQuery = queryString.stringify(keydata)
+		let url = `${APIsvr.value}/w041M_haveTotal.php?${sQuery}`
+		const data = await useFetch(url, {method: 'GET'}, {refetch: true}).get().json()	
+		C01_totalAmt.value = data.data.value.message
+	}	
+
+	const loadTotal_C02 = async () => {
+		let keydata = {
+			'JWT': window.localStorage.getItem('liwaJWT')
+		}
+		let sQuery = queryString.stringify(keydata)
+		let url = `${APIsvr.value}/w041_haveTotalC02.php?${sQuery}`
+		const data = await useFetch(url, {method: 'GET'}, {refetch: true}).get().json()	
+		C02_totalAmt.value = data.data.value.message
+	}
+
+	const loadTotal_C03 = async () => {
+		let keydata = {
+			'JWT': window.localStorage.getItem('liwaJWT')
+		}
+		let sQuery = queryString.stringify(keydata)
+		let url = `${APIsvr.value}/w041_haveTotalC03.php?${sQuery}`
+		const data = await useFetch(url, {method: 'GET'}, {refetch: true}).get().json()	
+		C03_totalAmt.value = data.data.value.message
+	}	
+
+	const inFundSubmit = async () => {
+		let keydata = { 
+			"JWT": window.localStorage.getItem('liwaJWT'),
+			"inFund": inFund.value
+		}
+		let datastr = JSON.stringify(keydata)
+		// console.log('datastr =', datastr)
+	    const useMyFetch = createFetch({
+	      baseUrl: APIsvr.value,
+	      fetchOptions: {
+	        mode: 'cors',
+	        headers: new Headers({
+	          'Content-Type': 'application/json; charset=utf-8'
+	        }),
+	        body: datastr
+	      }
+	    })
+	    const { data } = await useMyFetch('w041_setInFund.php').post().json()
+	   console.log('dataIn =', data)
+	    let msg = data.value.message
+	    if (msg) {
+	    	showMsg('訊息通知', msg, 2)
+	    } else {
+	    	inFund.value = 0
+	    	showMsg('訊息通知', '您的斡旋金入帳通知已發送', 2)
+	    }
+	}
+
+	const outFundSubmit = async () => {
+		let keydata = { 
+			"JWT": window.localStorage.getItem('liwaJWT'),
+			"outFund": inFund.value
+		}
+		let datastr = JSON.stringify(keydata)
+		// console.log('datastr =', datastr)
+	    const useMyFetch = createFetch({
+	      baseUrl: APIsvr.value,
+	      fetchOptions: {
+	        mode: 'cors',
+	        headers: new Headers({
+	          'Content-Type': 'application/json; charset=utf-8'
+	        }),
+	        body: datastr
+	      }
+	    })
+	    const { data } = await useMyFetch('w041_setOutFund.php').post().json()
+	    let msg = data.value.message
+	    if (msg) {
+	    	showMsg('訊息通知', msg, 2)
+	    } else {
+	    	outFund.value = 0
+	    	showMsg('訊息通知', '您的斡旋金提領通知已發送', 2)
+	    }		
+	}
+
+	// D01 section starts
+	const toggleShow = (idx) => {
+    	iValueD01.value = idx
+    	let iShow = liwaD01.value[idx].isShow
+        let iNuShow = (iShow == "0")? "1": "0"
+        liwaD01.value[idx].isShow = iNuShow
+    }
+
+    // D01 section ends
+
+	// D02 section starts
+	const toggleShowD02 = (idx) => {
+    	iValueD02.value = idx
+    	let iShow = liwaD02.value[idx].isShow
+        let iNuShow = (iShow == "0")? "1": "0"
+        liwaD02.value[idx].isShow = iNuShow
+    }
+
+    // D02 section ends
+
 	definePageMeta({
 	  layout: "web",
 	  colorMode: "light"
@@ -184,13 +363,19 @@
 
 	onMounted(() => {
 		useHead({title:`我的管理中心`})
+		APIsvr.value = window.sessionStorage.getItem('liwaAPIsvr')
 		loadData()
+		loadTotal_C01()
+		loadTotal_C02()
+		loadD01()
+		loadD02()
+		sysIcon.value = window.sessionStorage.getItem('liwaImgsvr') + '/liwa14/sysImgs/sysIcon.png'
 	})
 </script>
 
 <template>
 	<div class="w-full bg-slate-200 px-4 py-2">
-		<div class="w-full lg:w-[1024px] mx-auto flex flex-row justify-start">
+		<div class="w-full flex flex-row justify-start">
 			<div class="w-full lg:w-[320px] p-2 border-[0.125rem] border-slate-400">
 				<div class="actItem">管理面板<div class="btnGT" @click="setActive('A01')">&gt;</div></div>
 				<div class="actItem">基本資料設定<div class="btnGT" @click="setActive('A02')">&gt;</div></div>
@@ -208,12 +393,12 @@
 				<div class="actItem">系統訊息<div class="btnGT" @click="setActive('D01')">&gt;</div></div>
 				<div class="actItem">問與答<div class="btnGT" @click="setActive('D02')">&gt;</div></div>
 			</div>
-			<div class="hidden lg:block w-[calc(100%_-_320px)] ml-4 border-[0.125rem] border-slate-300 bg-white">
+			<div class="hidden lg:block w-[calc(100vw_-_350px)] ml-4 border-[0.125rem] border-slate-300 bg-gray-100">
 				<section v-show="step=='A02'">
-					<div class="w-full h-full my-0 lg:w-[700px] bg-white">
-						<div class="w-full bg-white mx-auto my-2 rounded-xl pb-1">
+					<div class="w-full h-full my-0 bg-gray-100">
+						<div class="w-full bg-gray-100 mx-auto my-2 rounded-xl pb-1">
 							<FormKit 
-							form-class="px-4 py-2 bg-yellow-200 rounded-2xl w-11/12"
+							form-class="px-4 py-2 bg-white rounded-2xl w-11/12"
 							type="form"
 							v-model="liwaData"
 							:form-class="submitted? 'hidden': 'block'"
@@ -225,7 +410,7 @@
 									<legend>基本設定</legend>
 									<div class="w-full h-[200px] mb-8">
 										<img 
-											class="mx-auto border-2 w-[200px] h-full"
+											class="border-2 w-[200px] h-full bg-yellow-200"
 											:src="iconSrc" 
 											width="200" 
 											:alt="liwaData.nickname" 
@@ -296,15 +481,17 @@
 									        />				        	
 								        </div>       	
 							        </div>
-							        <div class="w-full text-sm font-bold mt-2">
-							        	<span>會員等級:</span>
-										<span class="ml-4 text-2xl text-blue-500">{{ liwaData.grade }}</span>
-									</div>
-							        <div class="w-full text-sm font-bold mt-2">
-							        	<span>會員積分:</span>
-										<span class="ml-4 text-2xl text-blue-500">{{ liwaData.scores }}</span>
-									</div>	
-									<div class="mt-4">您還需要 積分可以升到下一級</div>
+							        <div class="flex flex-row">
+								        <div class="w-20 text-sm font-bold m-2 border-2 border-slate-200 rounded-lg">  	
+											<div class="text-6xl text-center text-orange-500">{{ liwaData.grade }}</div>
+											<div class="w-full text-md text-center text-black py-2">會員等級</div>
+										</div>	
+								        <div class="w-20 text-sm font-bold m-2 border-2 border-slate-200 rounded-lg">
+											<div class="text-6xl text-center text-orange-500">{{ liwaData.scores }}</div>
+											<div class="w-full text-md text-center text-black py-2">會員積分</div>
+										</div>	
+										<div class="mt-4 pt-14 box-border">您還需要 積分可以升到下一級</div>						        	
+							        </div>
 							        <FormKit
 							        	name="bankID"
 							        	label="銀行代碼 *"
@@ -341,10 +528,10 @@
 					</div>
 				</section>
 				<section v-show="step=='A03'">
-					<div class="w-full h-full bg-slate-200">
-						<div class="w-full lg:w-[700px] h-[82vh] mx-auto my-1 bg-white px-4 py-2">
+					<div class="w-full h-full bg-gray-200">
+						<div class="w-full h-[82vh] my-1 bg-gray-100 px-4 py-2">
 							<FormKit 
-						        form-class="px-4 py-2 bg-yellow-200 rounded-2xl w-11/12"
+						        form-class="px-4 py-2 bg-white rounded-2xl w-11/12"
 						        type="form"
 						        :form-class="submitted2? 'hidden': 'block'"
 						        style="margin: 1rem auto;"
@@ -404,14 +591,142 @@
 						:sUrl="'/Products?imode=6'"
 					/>							
 				</section>				
-				<section v-show="step=='C00'">
-					<h1>這是斡旋金視窗</h1>
+				<section v-show="step=='C01'">
+					<div class="w-full h-12 pt-4">
+						目前斡旋金總金額:  NT${{ C01_totalAmt }}
+					</div>
+					<liwaSimpleTbl
+						:tblTitle="'斡旋金明細'"
+						:headUrl="'w041_haveHead.php'"
+						:progID="'wProfile_C01'"
+						:dataUrl="'w041_haveD3.php'"
+					></liwaSimpleTbl>				
 				</section>
+				<section v-show="step=='C02'">
+					<div class="w-full h-12 pt-4">
+						已轉出斡旋金總金額:  NT${{ C02_totalAmt }}
+					</div>
+					<liwaSimpleTbl
+						:tblTitle="'已轉出斡旋金明細'"
+						:headUrl="'w041_haveHead.php'"
+						:progID="'wProfile_C02'"
+						:dataUrl="'w041_haveD3B.php'"
+					></liwaSimpleTbl>				
+				</section>
+				<section v-show="step=='C03'">
+					<div class="w-full h-12 pt-4">
+						待付餘額總金額:  NT${{ C03_totalAmt }}
+					</div>
+					<liwaSimpleTbl
+						:tblTitle="'待付餘額明細'"
+						:headUrl="'w041_haveHead.php'"
+						:progID="'wProfile_C03'"
+						:dataUrl="'w041_haveD3C.php'"
+					></liwaSimpleTbl>									
+				</section>	
+				<section v-show="step=='C04'">
+					<div class="px-4 flex flex-col ">
+						<div class="w-1/3 mt-8 mb-4 mx-1 px-8 py-12 rounded border-2 border-slate-400 bg-white">
+							<FormKit 
+								type="number"
+								label="匯入斡旋金"
+								v-model="inFund"
+								value="0"
+								validation="number"
+								help="請輸入已匯入的斡旋金金額, 待我方人員確認後, 會於下一個工作日為您入帳"
+							/>
+							<div class="w-20 h-12 bg-orange-500 text-white rounded text-center pt-3" @click="inFundSubmit()">送出</div>
+						</div>
+						<div class="w-1/3 mt-8 mb-4 mx-1 px-8 py-12 rounded border-2 border-slate-400 bg-white">
+							<FormKit 
+								type="number"
+								label="匯出斡旋金"
+								v-model="outFund"
+								value="0"
+								validation="number"
+								help="請輸入要匯出的斡旋金金額, 我方人員會於下一個工作日為您轉帳"
+							/>
+							<div class="w-20 h-12 bg-orange-500 text-white rounded text-center pt-3" @click="outFundSubmit()">送出</div>
+						</div>
+					</div>
+				</section>							
 				<section v-show="step=='D01'">
-					<h1>這是系統訊息</h1>
+					<div v-if="liwaD01.length > 0" class="px-4 py-2 flex flex-col overflow-x-hidden overflow-y-auto">
+						<div v-for="(object, index) in liwaD01" class="w-full py-2">
+							<div class="flex flex-row relative">
+								<div class="px-2 mr-4">{{ object.pDate }}</div>
+								<div class="pr-20">{{ object.shortItems }}</div>
+								<div class="w-8 absolute right-1 top-0" @click="toggleShow(index)">
+			                        <IconChevronDown v-if="object.isShow=='0'" class="w-7 h-7 text-slate-500 font-bold" />
+			                        <IconChevronUp v-else class="w-7 h-7 text-slate-500 font-bold" />
+								</div>								
+							</div>
+							<div v-if="object.isShow == 1" class="mt-2">
+								<div v-html="object.items" class="w-full px-8 py-2 bg-gray-200"></div>
+							</div>
+						</div>
+					</div>
+					<div v-else class="">暫無系統公告</div>
 				</section>	
 				<section v-show="step=='D02'">
-					<h1>這是問與答視窗</h1>
+					<div class="w-full mx-auto mt-2 py-2 flex flex-col bg-white border-8 border-gray-100 rounded-2xl">
+						<div class="w-full py-2 px-8">
+							<FormKit
+								label=""
+								type="text"
+								v-model="D02_Comment"
+								placeholder="請添加意見或問題..."
+								help="請添加意見或問題"
+							/>
+						</div>
+						<div class="w-full py-2 px-8">
+							<div class="w-20 py-2 px-4 text-center bg-orange-500 text-white rounded-lg" @click="saveD02()">存檔</div>
+						</div>
+					</div>
+					<div v-if="liwaD02.length > 0" class="w-full py-2 px-8 flex flex-col">
+						<div v-for="(objD02, indexM) in liwaD02" class="w-full py-2">
+							<div class="w-full flex flex-row relative">
+								<div class="w-24 h-20 flex flex-col border-2 border-gray-200">
+									<div class="w-12 h-12 mx-auto">
+										<img :src="objD02.picpath" height="45" class="rounded-full"/>
+									</div>
+									<div class="w-full mt-2 text-center text-sm">{{ objD02.userNM }}</div>
+								</div>
+								<div class="w-[calc(100%_-_4rem)] p-2 ml-8 leading-8 flex flex-col">
+									<div class="w-full">{{ objD02.sContent }}</div>
+									<div class="w-full text-sm text-gray-500 text-left">{{ objD02.postTime }}</div>
+								</div>
+								<div class="w-8 absolute right-1 top-0" @click="toggleShowD02(indexM)">
+			                        <IconChevronDown v-if="objD02.isShow=='0'" class="w-7 h-7 text-slate-500 font-bold" />
+			                        <IconChevronUp v-else class="w-7 h-7 text-slate-500 font-bold" />
+								</div>
+							</div>
+							<div v-if="objD02.isShow == '1'" class="w-full ">
+								<div v-if="objD02.arrDetail.length > 0" class="w-full m-2 ">
+									<div v-for="(objD02D, indexD) in objD02.arrDetail.length" class="w-full pl-16 pr-2 py-2 box-border">
+										<div class="w-full flex flex-row">
+											<div class="w-24 h-20 py-2 flex flex-col border-2 border-gray-200">
+												<div class="w-12 h-12 mx-auto">
+													<img :src="sysIcon" height="40" class="rounded-full"/>
+												</div>
+												<div class="w-full text-center text-sm">JT.C</div>
+											</div>
+											<div class="w-[calc(100%_-_4rem)] p-2 ml-8 leading-8 flex flex-col">
+												<div class="w-full">
+													{{ Object.entries(objD02.arrDetail)[indexD][1].replyContent }}
+												</div>
+												<div class="w-full text-sm text-gray-500 text-left">{{ Object.entries(objD02.arrDetail)[indexD][1].replyTime }}</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div v-else class="w-full m-2">
+									<div class="text-center py-20 font-bold text-gray-800 text-3xl">尚無回復</div>
+								</div>							
+							</div>
+						</div>
+					</div>
+					<div v-else class="text-center py-20 font-bold text-gray-800 text-3xl">尚無意見或問題</div>
 				</section>
 			</div>
 		</div>
@@ -432,7 +747,21 @@
 			type="file" 
 			accept="image/*" 
 		/>		
-	</div>		
+	</div>
+	<Teleport to="body">
+		<div
+			v-if="isMsg" 
+			class="w-full h-[150vh] absolute top-[100px] left-0 bg-slate-100 z-[500]"
+		>
+			<liwaMsg 
+			  	:msgTitle="objMsg.title"
+			  	:msgBody="objMsg.body"
+			  	:modalType="objMsg.modalType"
+			  	@hideMsg="hideMsg"
+			  	@confirmOK="confirmOK"
+			/> 			
+		</div>		
+	</Teleport>		
 </template>
 
 <style scope>

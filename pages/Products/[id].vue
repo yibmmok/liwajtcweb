@@ -19,7 +19,6 @@
 
 	const route = useRoute()
 	const mainID = ref('')
-	const siteID = ref('')
 	const APIsvr = ref('')
 	const imgsvr = ref('')
 	const liwaData = ref([])
@@ -52,7 +51,12 @@
 	const status = ref(0)
 
 	const loadData = async () => {
-		let url= window.sessionStorage.getItem('liwaAPIsvr') + "/w021_haveDetail.php?siteID="+siteID.value+"&mainID=" + mainID.value
+		let keydata = {
+			'JWT':window.localStorage.getItem('liwaJWT'),
+			'mainID': mainID.value
+		}
+		let sQuery = queryString.stringify(keydata)
+		let url = `${APIsvr.value}/w021_haveDetail.php?${sQuery}`
 		const data = await useFetch(url, {method: 'GET'}, {refetch: true}).get().json()
 		liwaData.value = data.data.value.arrSQL[0]
 		status.value = liwaData.value.status
@@ -63,31 +67,56 @@
 	}
 
 	const loadD3 = async () => {
-		let url= window.sessionStorage.getItem('liwaAPIsvr') + "/w021_haveD3.php?siteID="+siteID.value+"&mainID=" + mainID.value
+		let keydata = {
+			'JWT':window.localStorage.getItem('liwaJWT'),
+			'mainID': mainID.value
+		}
+		let sQuery = queryString.stringify(keydata)
+		let url = `${APIsvr.value}/w021_haveD3.php?${sQuery}`		
 		const dataD3 = await useFetch(url, {method: 'GET'}, {refetch: true}).get().json()
 		liwaPics.value = dataD3.data.value.arrSQL
 	}
 
 	const loadD4 = async () => {
-		let url= window.sessionStorage.getItem('liwaAPIsvr') + "/w021_haveD4.php?siteID="+siteID.value+"&mainID=" + mainID.value	
+		let keydata = {
+			'JWT':window.localStorage.getItem('liwaJWT'),
+			'mainID': mainID.value
+		}
+		let sQuery = queryString.stringify(keydata)
+		let url = `${APIsvr.value}/w021_haveD4.php?${sQuery}`			
 		const dataD4 = await useFetch(url, {method: 'GET'}, {refetch: true}).get().json()	
 		liwaPDF.value = dataD4.data.value.arrSQL
 	}
 
 	const loadLike = async () => {
-		let url= window.sessionStorage.getItem('liwaAPIsvr') + "/w021_haveLike.php?siteID="+siteID.value+"&mainID=" + mainID.value + "&userID="	+ window.sessionStorage.getItem('liwaUserID')
+		let keydata = {
+			'JWT':window.localStorage.getItem('liwaJWT'),
+			'mainID': mainID.value
+		}
+		let sQuery = queryString.stringify(keydata)
+		let url = `${APIsvr.value}/w021_haveLike.php?${sQuery}`			
 		const dataLike = await useFetch(url, {method: 'GET'}, {refetch: true}).get().json()	
 		if (dataLike.data.value.arrSQL.length > 0) isLike.value = dataLike.data.value.arrSQL[0].isLike
 	}
 
 	const load021D1 = async () => {
-		let url= window.sessionStorage.getItem('liwaAPIsvr') + "/w021_have021D1.php?siteID="+siteID.value+"&mainID=" + mainID.value + "&userID=" + window.sessionStorage.getItem('liwaUserID')
+		let keydata = {
+			'JWT':window.localStorage.getItem('liwaJWT'),
+			'mainID': mainID.value
+		}
+		let sQuery = queryString.stringify(keydata)
+		let url = `${APIsvr.value}/w021_have021D1.php?${sQuery}`
 		const dataD1 = await useFetch(url, {method: 'GET'}, {refetch: true}).get().json()
 		liwaD1.value = dataD1.data.value.arrSQL
 	}
 
 	const loadLastBid = async () => {
-		let url= window.sessionStorage.getItem('liwaAPIsvr') + "/w021_haveBid.php?siteID="+siteID.value+"&mainID=" + mainID.value + "&userID=" + window.sessionStorage.getItem('liwaUserID')
+		let keydata = {
+			'JWT':window.localStorage.getItem('liwaJWT'),
+			'mainID': mainID.value
+		}
+		let sQuery = queryString.stringify(keydata)
+		let url = `${APIsvr.value}/w021_have021D1.php?${sQuery}`
 		const dataBid = await useFetch(url, {method: 'GET'}, {refetch: true}).get().json()
 		lastBid.value = dataBid.data.value.arrSQL[0].bidPrice
 		switch (lastBid.value) {
@@ -118,7 +147,7 @@
 	}
 
 	const afterLoadData = () => {
-		let userID = window.sessionStorage.getItem('liwaUserID')
+		// let userID = window.sessionStorage.getItem('liwaUserID')
 		if (userID) {
 			loadLike()
 			if (userID == liwaData.value.sellerID) {
@@ -153,22 +182,17 @@
 
 	const toggleLike = async () => {
 		isLike.value = !isLike.value
-		let memberID = window.sessionStorage.getItem('liwaUserID')
-		if (!memberID) {
-			// 未登入先設liwaNowLink, 再導到 login頁面
-			window.sessionStorage.setItem('liwaNowLink', route.fullPath)
-			window.location.href = '/login'
-		} else {
+		let sJWT = window.localStorage.getItem('liwaJWT')
+		if (sJWT) {
 			// 已登入可以設定收藏
 			let keyData = {
-				'siteID':siteID.value,
+				'JWT':sJWT,
 				'mainID':mainID.value,
-				'userID':memberID,
 				'isLike': isLike.value
 			}
 			let datastr = JSON.stringify(keyData)	
 		    const useMyFetch = createFetch({
-		      baseUrl: window.sessionStorage.getItem('liwaAPIsvr'),
+		      baseUrl: APIsvr.value,
 		      fetchOptions: {
 		        mode: 'cors',
 		        headers: new Headers({
@@ -182,7 +206,11 @@
 		    if (msg) {
 		    	// 顯示錯誤訊息
 		    	alert(msg)
-		    }			
+		    }	
+		} else {
+			// 未登入先設liwaNowLink, 再導到 login頁面
+			window.sessionStorage.setItem('liwaNowLink', route.fullPath)
+			window.location.href = '/login'			
 		}	
 	}
 
@@ -197,34 +225,32 @@
 	const openBargain = async () => {
 		// 先檢查是否登入, 若未登入, 跳login界面, 若已登入, 檢查物件是否斡旋或待成交, 再檢查買家的出價資格
 		let userID = window.sessionStorage.getItem('liwaUserID')
-		if (!userID) {
-			window.sessionStorage.setItem('liwaNowLink', route.fullPath)
-			window.location.href = '/login'			
-		} else {
+		let sJWT = window.localStorage.getItem('liwaJWT')
+		if (sJWT) {
 			// 先檢查物件的 status > 1(是否斡旋或待成交)
 			if ((status.value == 2) || (status.value == 3)) {
 				showMsg('系統訊息', '本物件斡旋中, 請於斡旋失敗再出價', 1)
 			} else {
 				// 檢查user 是否被停權
 				let keydata = {
-					'siteID': siteID.value,
-					'userID':window.sessionStorage.getItem('liwaUserID'),
+					'JWT': sJWT,
 					'prodID':mainID.value
 				}
 				let sQuery = queryString.stringify(keydata)
-				let APIsvr = window.sessionStorage.getItem('liwaAPIsvr')
-				let url = `${APIsvr}/w021_chkOffuser.php?${sQuery
-				}`
-			console.log('url in chkUser =', url)
+				let url = `${APIsvr.value}/w021_chkOffuser.php?${sQuery}`
 				const datachk = await useFetch(url, {method: 'GET'}, {refetch: true}).get().json()
-			console.log('datachk =', datachk)
 				let msgOff = datachk.data.value.isOff
 
 				if (msgOff) {
 					msgBargain.value = msgOff
 				} else {
 					// 檢查該物件status及會員的斡旋金帳戶, 若有足夠餘額, 進入斡旋, 否則顯示斡旋金餘額不足訊息
-					let url = window.sessionStorage.getItem('liwaAPIsvr') + "/w021_openBargain.php?siteID="+siteID.value+"&userID=" + window.sessionStorage.getItem('liwaUserID')+"&mainID=" + mainID.value
+					let keydata1 = {
+						'JWT': window.localStorage.getItem('liwaJWT'),
+						'mainID': mainID.value
+					}
+					let sQuery1 = queryString.stringify(keydata1)
+					let url = `${APIsvr.value}/w021_openBargain.php?${sQuery1}`
 					const dataBargain = await useFetch(url, {method: 'GET'}, {refetch: true}).get().json()
 					let msg = dataBargain.data.value.message
 					if (msg) {
@@ -236,7 +262,10 @@
 					}				
 				}
 			}
-		}		
+		} else {
+			window.sessionStorage.setItem('liwaNowLink', route.fullPath)
+			window.location.href = '/login'				
+		}	
 	}
 
 	const submitPrice = async () => {
@@ -256,15 +285,14 @@
 		
 		if (bStopFlag == false) {
 			let keyData = {
-				"siteID": window.sessionStorage.getItem('liwaSiteID'),
+				"JWT": window.localStorage.getItem('liwaJWT'),
 				"prodID": mainID.value,
 				"sellerID": liwaData.value.sellerID,
-				"biderID": window.sessionStorage.getItem('liwaUserID'),
 				"bidPrice": bidPrice.value
 			}
 			let datastr = JSON.stringify(keyData)
 		    const useMyFetch = createFetch({
-		      baseUrl: window.sessionStorage.getItem('liwaAPIsvr'),
+		      baseUrl: APIsvr.value,
 		      fetchOptions: {
 		        mode: 'cors',
 		        headers: new Headers({
@@ -293,7 +321,7 @@
 		let datastr = JSON.stringify(keyData)
 		// console.log('datastr in setPriceBack =', datastr)
 	    const useMyFetch = createFetch({
-	      baseUrl: window.sessionStorage.getItem('liwaAPIsvr'),
+	      baseUrl: APIsvr.value,
 	      fetchOptions: {
 	        mode: 'cors',
 	        headers: new Headers({
@@ -303,7 +331,6 @@
 	      }
 	    })
 	    const { data } = await useMyFetch('w021_setPriceBack.php').post().json()
-	   console.log('dataRB =', data)
 	    if (data.value.message == '') {
 	    	hideMsg()
 	    	// alert('您的回覆已送出')
@@ -349,7 +376,7 @@
 		// 取得 mainID, 由mainID取得
 		mainID.value = route.params.id
 		full_Path.value = route.fullPath
-		siteID.value = window.sessionStorage.getItem('liwaSiteID')
+		APIsvr.value = window.sessionStorage.getItem('liwaAPIsvr')
 		loadD3()
 		loadD4()			
 		loadData()	

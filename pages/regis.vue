@@ -79,7 +79,7 @@
       >
         <FormKit
           name="memberNM"
-          label="姓名"
+          label="姓名*"
           type="text"
           placeholder="請輸入姓名"
           help="可輸入中英文名字(字數限制100字)"
@@ -88,13 +88,26 @@
         />        
         <FormKit
           name="mobile"
-          label="請輸入手機號碼"
+          label="手機號碼*"
           type="text"
           placeholder="請輸入手機號碼"
           help="請輸入您的手機號碼, 共10碼, 無空白"
           validation="required|number|length:10"
           outer-class="mb-5"
         />
+        <div class="w-full h-[20rem] py-8 border-2 border-gray-100 bg-white">
+          <iframe src="/TermShort" frameborder="0" class="w-full h-[18rem] px-4 overflow-x-hidden overflow-y-auto"></iframe>
+        </div>
+        <div class="w-full my-4 ">
+          <FormKit 
+            name="terms"
+            type="checkbox"
+            label="我已閱讀線上合約內容並同意遵守"
+            inner-class="float-left mr-2 leading-8"
+            :value="false"
+            validation="accepted"
+          />          
+        </div>
       </FormKit>
       <div class="w-full pl-8 text-left text-red-400 text-md">{{ isMessage }}</div>
     </div> 
@@ -106,5 +119,9 @@
 <style scope>
   .formkit-outer {
     margin-bottom: 1.25rem;
+  }
+
+  .formkit-wrapper .formkit-inner {
+    border:none;
   }
 </style>

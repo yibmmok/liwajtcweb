@@ -427,6 +427,7 @@
 									          placeholder="請輸入姓名"
 									          help="可輸入中英文名字(字數限制100字)"
 									          validation="required"
+									          input-class="py-8"
 									        />							
 										</div>
 										<div class="w-full lg:w-1/2 lg:ml-8 mt-2">
@@ -436,6 +437,7 @@
 									          type="radio"
 									          :options="['先生', '小姐']"
 									          help="請選擇性別"
+									          outer-class="mt-2"
 									        />
 										</div>				
 									</div>				        
